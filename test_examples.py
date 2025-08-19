@@ -1,17 +1,28 @@
 #!/usr/bin/env python3
 """
-Test examples for the Python Code Execution Service
-These scripts can be sent to the /execute endpoint for testing.
+Test Examples for Python Code Execution Service
+
+This file contains various Python script examples that can be used to test
+the /execute endpoint of the service.
 """
 
-# Basic example - simple return
+# Example 1: Basic function with return value
 BASIC_SCRIPT = '''
 def main():
-    return {"message": "Hello from Python!", "status": "success"}
+    return {"message": "Hello World", "status": "success"}
 '''
 
-# Data processing example with pandas and numpy
-DATA_PROCESSING_SCRIPT = '''
+# Example 2: Function with print statements
+PRINT_SCRIPT = '''
+def main():
+    print("Starting calculation...")
+    result = 42 * 2
+    print(f"Calculation result: {result}")
+    return {"result": result, "message": "Calculation complete"}
+'''
+
+# Example 3: Data processing with pandas
+PANDAS_SCRIPT = '''
 import pandas as pd
 import numpy as np
 
@@ -34,89 +45,188 @@ def main():
     return stats
 '''
 
-# File system example (limited access)
-FILE_SYSTEM_SCRIPT = '''
-import os
-
+# Example 4: Error handling example
+ERROR_SCRIPT = '''
 def main():
     try:
-        # Only /tmp directory is accessible
-        files = os.listdir("/tmp")
-        return {"files_in_tmp": files, "access": "limited"}
-    except Exception as e:
-        return {"error": str(e), "access": "denied"}
+        result = 10 / 0
+        return {"result": result}
+    except ZeroDivisionError as e:
+        return {"error": str(e), "type": "ZeroDivisionError"}
 '''
 
-# Mathematical computation example
+# Example 5: Complex data structure
+COMPLEX_SCRIPT = '''
+def main():
+    # Create nested data structure
+    data = {
+        "users": [
+            {"id": 1, "name": "Alice", "age": 30},
+            {"id": 2, "name": "Bob", "age": 25},
+            {"id": 3, "name": "Charlie", "age": 35}
+        ],
+        "metadata": {
+            "total_users": 3,
+            "average_age": 30.0,
+            "created_at": "2024-01-01"
+        }
+    }
+    
+    print(f"Processed {data['metadata']['total_users']} users")
+    return data
+'''
+
+# Example 6: Mathematical calculations
 MATH_SCRIPT = '''
 import math
 
 def main():
-    # Calculate some mathematical constants
+    # Calculate various mathematical values
     pi = math.pi
     e = math.e
+    sqrt_2 = math.sqrt(2)
     
-    # Generate some calculations
     calculations = {
         "pi": pi,
         "e": e,
-        "pi_squared": pi ** 2,
-        "e_pi": e ** pi,
-        "factorial_10": math.factorial(10),
-        "sqrt_2": math.sqrt(2)
+        "sqrt_2": sqrt_2,
+        "sin_pi": math.sin(pi),
+        "cos_pi": math.cos(pi),
+        "log_10": math.log10(100)
     }
     
     print("Mathematical calculations completed")
     return calculations
 '''
 
-# Error handling example (will cause an error)
-ERROR_SCRIPT = '''
+# Example 7: String processing
+STRING_SCRIPT = '''
 def main():
-    # This will cause a division by zero error
-    result = 1 / 0
-    return {"result": result}
+    text = "Hello, World! This is a test string."
+    
+    # Process the string
+    processed = {
+        "original": text,
+        "length": len(text),
+        "uppercase": text.upper(),
+        "lowercase": text.lower(),
+        "word_count": len(text.split()),
+        "reversed": text[::-1]
+    }
+    
+    print(f"Processed string: {text}")
+    return processed
 '''
 
-# Missing main function (will cause validation error)
-INVALID_SCRIPT = '''
-def hello():
-    return "Hello World"
-'''
-
-# Non-JSON return (will cause error)
-NON_JSON_SCRIPT = '''
+# Example 8: List and dictionary operations
+DATA_SCRIPT = '''
 def main():
-    return "This is not JSON"
+    # Create sample data
+    numbers = list(range(1, 11))
+    squares = [x**2 for x in numbers]
+    cubes = [x**3 for x in numbers]
+    
+    # Create dictionary
+    data = {
+        "numbers": numbers,
+        "squares": squares,
+        "cubes": cubes,
+        "sum_numbers": sum(numbers),
+        "sum_squares": sum(squares),
+        "sum_cubes": sum(cubes)
+    }
+    
+    print(f"Generated {len(numbers)} numbers")
+    return data
 '''
 
-# Test scripts dictionary
-TEST_SCRIPTS = {
+# Example 9: File-like operations (simulated)
+FILE_SCRIPT = '''
+from io import StringIO
+
+def main():
+    # Simulate file operations
+    content = "Line 1\\nLine 2\\nLine 3\\nLine 4\\nLine 5"
+    
+    # Process content
+    lines = content.split('\\n')
+    line_count = len(lines)
+    char_count = len(content)
+    
+    # Create result
+    result = {
+        "content": content,
+        "line_count": line_count,
+        "char_count": char_count,
+        "lines": lines,
+        "first_line": lines[0] if lines else "",
+        "last_line": lines[-1] if lines else ""
+    }
+    
+    print(f"Processed file with {line_count} lines")
+    return result
+'''
+
+# Example 10: Conditional logic
+CONDITIONAL_SCRIPT = '''
+def main():
+    import random
+    
+    # Generate random number
+    number = random.randint(1, 100)
+    
+    # Apply conditional logic
+    if number < 25:
+        category = "low"
+        message = "Number is in the low range"
+    elif number < 75:
+        category = "medium"
+        message = "Number is in the medium range"
+    else:
+        category = "high"
+        message = "Number is in the high range"
+    
+    result = {
+        "number": number,
+        "category": category,
+        "message": message,
+        "is_even": number % 2 == 0,
+        "is_prime": number > 1 and all(number % i != 0 for i in range(2, int(number**0.5) + 1))
+    }
+    
+    print(f"Generated number: {number}")
+    return result
+'''
+
+# Dictionary of all examples
+EXAMPLES = {
     "basic": BASIC_SCRIPT,
-    "data_processing": DATA_PROCESSING_SCRIPT,
-    "file_system": FILE_SYSTEM_SCRIPT,
-    "math": MATH_SCRIPT,
+    "print": PRINT_SCRIPT,
+    "pandas": PANDAS_SCRIPT,
     "error": ERROR_SCRIPT,
-    "invalid": INVALID_SCRIPT,
-    "non_json": NON_JSON_SCRIPT
+    "complex": COMPLEX_SCRIPT,
+    "math": MATH_SCRIPT,
+    "string": STRING_SCRIPT,
+    "data": DATA_SCRIPT,
+    "file": FILE_SCRIPT,
+    "conditional": CONDITIONAL_SCRIPT
 }
 
-def print_test_script(name, script):
-    """Print a test script with its name."""
-    print(f"\n{'='*50}")
-    print(f"TEST SCRIPT: {name.upper()}")
-    print(f"{'='*50}")
-    print(script.strip())
-    print(f"{'='*50}")
+def print_examples():
+    """Print all available examples."""
+    print("Available test examples:")
+    for name, script in EXAMPLES.items():
+        print(f"  {name}: {script.split('def main():')[0].strip()}")
+    print()
+
+def get_example(name):
+    """Get a specific example by name."""
+    return EXAMPLES.get(name, BASIC_SCRIPT)
 
 if __name__ == "__main__":
-    print("Python Code Execution Service - Test Scripts")
-    print("Use these scripts to test the /execute endpoint")
-    
-    for name, script in TEST_SCRIPTS.items():
-        print_test_script(name, script)
-    
-    print("\nTo test with curl:")
-    print("curl -X POST http://localhost:8080/execute \\")
-    print("  -H 'Content-Type: application/json' \\")
-    print("  -d '{\"script\": \"def main():\\n    return {\\\"test\\\": \\\"value\\\"}\"}'") 
+    print_examples()
+    print("Use these examples to test your Python Code Execution Service!")
+    print("Example usage:")
+    print("  curl -X POST http://localhost:8080/execute \\")
+    print("    -H 'Content-Type: application/json' \\")
+    print("    -d '{\"script\": \"def main(): return {\\\"message\\\": \\\"Hello\\\"}\"}'") 

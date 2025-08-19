@@ -1,68 +1,108 @@
 # Python Code Execution Service
 
-A secure, containerized service that executes arbitrary Python code in a sandboxed environment and returns the result of the `main()` function.
+A secure, containerized service that executes arbitrary Python code in a sandboxed environment and returns the result of the `main()` function. Perfect for building code execution platforms, educational tools, or API services that need to run Python code safely.
 
-## Features
+## 🌟 Features
 
-- **Secure Execution**: Uses nsjail for sandboxed code execution
-- **Resource Limits**: CPU, memory, and file size restrictions
-- **Input Validation**: Ensures scripts contain valid `main()` function
-- **JSON Output**: Returns both function result and stdout separately
+- **Secure Execution**: Code runs in isolated subprocess environment with resource limits
+- **Smart Output Capture**: Separates function return values from print statements
+- **Library Support**: Built-in support for pandas, numpy, and other Python libraries
+- **JSON Validation**: Ensures all return values are JSON-serializable
+- **Error Handling**: Comprehensive error reporting and validation
 - **Docker Ready**: Lightweight container for easy deployment
+- **Cloud Native**: Designed for deployment on Railway, Google Cloud Run, or any container platform
 
-## Security Features
+## 🚀 Live Service
 
-- **Basic Sandboxing**: Script execution in isolated subprocess environment
-- **Resource Limits**: 
-  - 30 second execution timeout
-  - Process isolation from main service
-- **Non-root Execution**: Runs as unprivileged user
+The service is now deployed and available at: **`https://pythonexecutor-production.up.railway.app`**
+
+### Quick Test
+```bash
+# Health check
+curl https://pythonexecutor-production.up.railway.app/health
+
+# Basic execution
+curl -X POST https://pythonexecutor-production.up.railway.app/execute \
+  -H "Content-Type: application/json" \
+  -d '{"script": "def main():\n    return {\"message\": \"Hello World!\"}"}'
+```
+
+## 🏗️ Architecture
+
+### How It Works
+1. **Request Validation**: Checks for valid JSON and required script field
+2. **Script Validation**: Ensures script contains `main()` function and valid Python syntax
+3. **Safe Execution**: Runs script in isolated subprocess with timeout protection
+4. **Output Processing**: Captures stdout separately from function return value
+5. **JSON Conversion**: Handles numpy/pandas types and validates JSON serialization
+6. **Response**: Returns structured JSON with result and stdout
+
+### Security Features
+- **Process Isolation**: Each script runs in separate subprocess
+- **Resource Limits**: 30-second execution timeout
+- **Non-root Execution**: Container runs as unprivileged user
 - **Input Validation**: Strict validation of script content and return values
-- **Note**: This is a simplified version for demonstration. For production use, implement nsjail or similar sandboxing.
+- **Error Containment**: Script errors don't affect the main service
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Docker
-- curl (for testing)
+- **Docker** (for containerized deployment)
+- **Python 3.11+** (for local development)
+- **curl** (for testing)
 
-## Quick Start
+## 🚀 Quick Start
 
-### Local Development
+### Option 1: Use the Live Service
+The service is already deployed and ready to use at:
+```
+https://pythonexecutor-production.up.railway.app
+```
 
-1. **Build the Docker image:**
+### Option 2: Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/pranitha275/PythonExecutor.git
+   cd PythonExecutor
+   ```
+
+2. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Run locally**
+   ```bash
+   python app.py
+   ```
+
+4. **Test the service**
+   ```bash
+   curl -X POST http://localhost:8080/execute \
+     -H "Content-Type: application/json" \
+     -d '{"script": "def main():\n    return {\"message\": \"Hello Local!\"}"}'
+   ```
+
+### Option 3: Docker Deployment
+
+1. **Build the image**
    ```bash
    docker build -t python-executor .
    ```
 
-2. **Run the service:**
+2. **Run the container**
    ```bash
    docker run -p 8080:8080 python-executor
    ```
 
-**Note**: The service is currently running on port 8081 to avoid conflicts with other services. Adjust the port mapping as needed.
-
-3. **Test the service:**
+3. **Test the service**
    ```bash
    curl -X POST http://localhost:8080/execute \
      -H "Content-Type: application/json" \
-     -d '{
-       "script": "import pandas as pd\nimport numpy as np\ndef main():\n    df = pd.DataFrame({\"A\": [1, 2, 3], \"B\": [4, 5, 6]})\n    result = {\"sum\": df[\"A\"].sum(), \"mean\": df[\"B\"].mean()}\n    print(\"Processing data...\")\n    return result"
-     }'
+     -d '{"script": "def main():\n    return {\"message\": \"Hello Docker!\"}"}'
    ```
 
-### Expected Response
-
-```json
-{
-  "result": {
-    "sum": 6,
-    "mean": 5.0
-  },
-  "stdout": "Processing data..."
-}
-```
-
-## API Endpoints
+## 🎯 API Reference
 
 ### POST /execute
 
@@ -83,6 +123,13 @@ Executes a Python script and returns the result of the `main()` function.
 }
 ```
 
+**Error Response:**
+```json
+{
+  "error": "Script must contain a 'main()' function"
+}
+```
+
 ### GET /health
 
 Health check endpoint.
@@ -94,160 +141,280 @@ Health check endpoint.
 }
 ```
 
-## Script Requirements
+## 📝 Script Requirements
 
+### Required Structure
 1. **Must contain a `main()` function**
 2. **`main()` function must return JSON-serializable data**
 3. **Valid Python syntax**
-4. **Access to standard libraries: `os`, `pandas`, `numpy`**
 
-## Example Scripts
+### Valid Examples
 
-### Basic Example
+**Basic Return:**
 ```python
 def main():
-    return {"message": "Hello from Python!"}
+    return {"message": "Hello World"}
 ```
 
-### Data Processing Example
+**With Print Statements:**
+```python
+def main():
+    print("Processing data...")
+    result = {"status": "success", "count": 42}
+    print(f"Returning {result}")
+    return result
+```
+
+**Using Libraries:**
 ```python
 import pandas as pd
 import numpy as np
 
 def main():
-    # Create sample data
-    data = np.random.randn(100)
-    df = pd.DataFrame({"values": data})
-    
-    # Calculate statistics
-    stats = {
-        "count": len(df),
-        "mean": float(df["values"].mean()),
-        "std": float(df["values"].std()),
-        "min": float(df["values"].min()),
-        "max": float(df["values"].max())
+    df = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
+    print(f"DataFrame shape: {df.shape}")
+    return {
+        "shape": df.shape,
+        "sum": df.sum().to_dict(),
+        "mean": df.mean().to_dict()
     }
-    
-    print("Data analysis complete!")
-    return stats
 ```
 
-### File System Example (Limited Access)
+### Invalid Examples
+
+**Missing main() function:**
 ```python
-import os
-
-def main():
-    # Only /tmp directory is accessible
-    files = os.listdir("/tmp")
-    return {"files_in_tmp": files}
+print("Hello World")
+# ❌ No main() function
 ```
 
-## Error Handling
+**Non-JSON return:**
+```python
+def main():
+    return lambda x: x  # ❌ Lambda functions aren't JSON serializable
+```
 
-The service returns appropriate HTTP status codes and error messages:
+**Syntax Error:**
+```python
+def main():
+    return {"message": "Hello"  # ❌ Missing closing brace
+```
 
-- **400 Bad Request**: Invalid script format or syntax
-- **500 Internal Server Error**: Execution failures or timeouts
+## 🧪 Testing Examples
 
-### Common Error Scenarios
+### Test 1: Basic Functionality
+```bash
+curl -X POST https://pythonexecutor-production.up.railway.app/execute \
+  -H "Content-Type: application/json" \
+  -d '{"script": "def main():\n    print(\"Hello from Railway!\")\n    return {\"message\": \"Success!\", \"timestamp\": \"2024-01-01\"}"}'
+```
 
-1. **Missing main() function:**
-   ```json
-   {"error": "Script must contain a 'main()' function"}
-   ```
+**Expected Response:**
+```json
+{
+  "result": {
+    "message": "Success!",
+    "timestamp": "2024-01-01"
+  },
+  "stdout": "Hello from Railway!"
+}
+```
 
-2. **Invalid Python syntax:**
-   ```json
-   {"error": "Invalid Python syntax: invalid syntax (<string>, line 1)"}
-   ```
+### Test 2: Data Processing with Pandas
+```bash
+curl -X POST https://pythonexecutor-production.up.railway.app/execute \
+  -H "Content-Type: application/json" \
+  -d '{"script": "import pandas as pd\nimport numpy as np\ndef main():\n    df = pd.DataFrame({\"A\": [1, 2, 3], \"B\": [4, 5, 6]})\n    print(f\"DataFrame shape: {df.shape}\")\n    return {\"shape\": df.shape, \"sum\": df.sum().to_dict()}"}'
+```
 
-3. **Non-JSON return value:**
-   ```json
-   {"error": "main() function must return valid JSON"}
-   ```
+**Expected Response:**
+```json
+{
+  "result": {
+    "shape": [3, 2],
+    "sum": {"A": 6, "B": 15}
+  },
+  "stdout": "DataFrame shape: (3, 2)"
+}
+```
 
-4. **Execution timeout:**
-   ```json
-   {"error": "Script execution timed out"}
-   ```
+### Test 3: Error Handling
+```bash
+curl -X POST https://pythonexecutor-production.up.railway.app/execute \
+  -H "Content-Type: application/json" \
+  -d '{"script": "def main():\n    return lambda x: x"}'
+```
 
-## Deployment
+**Expected Response:**
+```json
+{
+  "error": "Execution error: main() function must return valid JSON"
+}
+```
+
+## 🚀 Deployment
+
+### Railway.app (Recommended for Quick Start)
+
+1. **Fork this repository** to your GitHub account
+2. **Connect Railway** to your GitHub repository
+3. **Deploy automatically** - Railway will detect the Dockerfile and deploy
+4. **Get your public URL** from the Railway dashboard
 
 ### Google Cloud Run
 
-1. **Build and push to Google Container Registry:**
+1. **Build and push to Google Container Registry**
    ```bash
-   gcloud builds submit --tag gcr.io/PROJECT_ID/python-executor
+   gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/python-executor
    ```
 
-2. **Deploy to Cloud Run:**
+2. **Deploy to Cloud Run**
    ```bash
    gcloud run deploy python-executor \
-     --image gcr.io/PROJECT_ID/python-executor \
+     --image gcr.io/YOUR_PROJECT_ID/python-executor \
      --platform managed \
      --region us-central1 \
-     --allow-unauthenticated \
-     --port 8080
+     --allow-unauthenticated
    ```
 
-3. **Test with Cloud Run URL:**
-   ```bash
-   curl -X POST https://YOUR_SERVICE_URL/execute \
-     -H "Content-Type: application/json" \
-     -d '{"script": "def main():\n    return {\"deployed\": true}"}'
-   ```
+### Other Platforms
 
-### Docker Compose (Optional)
+- **AWS ECS/Fargate**: Use the Dockerfile with ECS task definition
+- **Azure Container Instances**: Deploy directly from Docker image
+- **DigitalOcean App Platform**: Connect GitHub repository for auto-deployment
 
-```yaml
-version: '3.8'
-services:
-  python-executor:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - FLASK_ENV=production
+## 🔧 Configuration
+
+### Environment Variables
+
+- **PORT**: Port to bind to (default: 8080)
+- **WORKERS**: Number of Gunicorn workers (default: 1)
+- **TIMEOUT**: Request timeout in seconds (default: 60)
+
+### Customization
+
+**Modify timeout in start.sh:**
+```bash
+exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 120 app:app
 ```
 
-## Security Considerations
+**Add more workers for production:**
+```bash
+exec gunicorn --bind 0.0.0.0:$PORT --workers 4 --timeout 60 app:app
+```
 
-- **Code Isolation**: User scripts run in completely isolated containers
-- **Resource Limits**: Strict limits prevent resource exhaustion attacks
-- **File System Access**: Only essential directories are mounted
-- **Network Isolation**: No external network access from scripts
-- **Process Limits**: Single process execution with timeout
+## 🛠️ Development
 
-## Performance
+### Project Structure
+```
+PythonExecutor/
+├── app.py              # Main Flask application
+├── start.sh            # Startup script for production
+├── Dockerfile          # Container configuration
+├── requirements.txt    # Python dependencies
+├── railway.json        # Railway deployment config
+├── README.md           # This file
+└── test_examples.py    # Example scripts for testing
+```
 
-- **Lightweight Image**: Based on Python slim image
-- **Fast Startup**: Optimized for Cloud Run deployment
-- **Efficient Execution**: Single worker process for security
+### Adding New Features
 
-## Troubleshooting
+1. **New Endpoints**: Add routes to `app.py`
+2. **Enhanced Security**: Implement nsjail or similar sandboxing
+3. **Additional Libraries**: Update `requirements.txt` and Dockerfile
+4. **Custom Validation**: Extend `validate_script()` function
+
+### Testing
+
+**Run local tests:**
+```bash
+python test_examples.py
+```
+
+**Test with custom scripts:**
+```bash
+curl -X POST http://localhost:8080/execute \
+  -H "Content-Type: application/json" \
+  -d '{"script": "YOUR_PYTHON_SCRIPT_HERE"}'
+```
+
+## 🔒 Security Considerations
+
+### Current Implementation
+- **Process Isolation**: Each script runs in separate subprocess
+- **Resource Limits**: Execution timeout prevents infinite loops
+- **Input Validation**: Script content and return value validation
+- **Non-root Execution**: Container runs as unprivileged user
+
+### Production Enhancements
+- **nsjail Integration**: Advanced sandboxing for better isolation
+- **Resource Quotas**: CPU and memory limits per execution
+- **Network Isolation**: Prevent outbound network calls
+- **File System Restrictions**: Limit file access and creation
+- **Rate Limiting**: Prevent abuse through request throttling
+
+## 🐛 Troubleshooting
 
 ### Common Issues
 
-1. **nsjail not found**: Ensure Docker image built correctly
-2. **Permission denied**: Check file ownership in container
-3. **Import errors**: Verify package paths in nsjail config
+**Service won't start:**
+- Check if port 8080 is available
+- Verify Docker container is running
+- Check logs: `docker logs <container_id>`
+
+**Script execution fails:**
+- Ensure script contains `main()` function
+- Check Python syntax is valid
+- Verify return value is JSON-serializable
+
+**Permission denied errors:**
+- Ensure startup script is executable: `chmod +x start.sh`
+- Check file ownership in container
+
+**Timeout errors:**
+- Increase timeout in `start.sh` if needed
+- Check if script has infinite loops
 
 ### Debug Mode
 
-For local development, you can run Flask in debug mode:
-
-```bash
-docker run -p 8080:8080 -e FLASK_ENV=development python-executor
+**Enable Flask debug mode locally:**
+```python
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=8080, debug=True)
 ```
 
-## Contributing
+**Check container logs:**
+```bash
+docker logs <container_id>
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+## 🤝 Contributing
 
-## License
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature-name`
+3. **Make your changes**
+4. **Test thoroughly**
+5. **Submit a pull request**
 
-This project is licensed under the MIT License. 
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- **Flask**: Web framework for the API
+- **Gunicorn**: WSGI server for production
+- **Railway**: Free hosting platform
+- **Docker**: Containerization technology
+
+## 📞 Support
+
+- **Issues**: Report bugs on GitHub Issues
+- **Discussions**: Ask questions on GitHub Discussions
+- **Documentation**: Check this README for common solutions
+
+---
+
+**Happy coding! 🚀**
+
+Your Python Code Execution Service is ready to power the next generation of code execution platforms! 

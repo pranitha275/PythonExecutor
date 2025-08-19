@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Get the port from Railway environment variable, default to 8080
+# Get port from Railway environment variable, default to 8080
 PORT=${PORT:-8080}
 
 echo "Starting Python Code Execution Service on port $PORT"

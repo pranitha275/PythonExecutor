@@ -26,25 +26,20 @@ def execute_script_safely(script):
     """Execute the Python script in a secure environment."""
     
     try:
-        # Execute the script with basic security measures
-        # Note: This is a simplified version for initial testing
-        # In production, you should use nsjail or similar sandboxing
-        
-        # Create a wrapper script that executes the user code and captures output
-        # Create a wrapper script that executes the user code and captures output
-        # Use a different approach to avoid f-string issues with quotes
+        # Escape quotes and newlines for the wrapper script
         script_escaped = script.replace('"', '\\"').replace('\n', '\\n')
         
+        # Create wrapper script that executes user code and captures output
         wrapper_script = f'''import sys
 import json
 import traceback
 from io import StringIO
 
-# Create a namespace for the user code
+# Create namespace for user code
 user_globals = {{}}
 
 try:
-    # Execute the user script in the namespace
+    # Execute user script in namespace
     exec("{script_escaped}", user_globals)
     
     # Check if main function exists
@@ -53,7 +48,6 @@ try:
         sys.exit(1)
     
     # Capture stdout during main() execution
-    # Store original stdout
     original_stdout = sys.stdout
     stdout_capture = StringIO()
     sys.stdout = stdout_capture
@@ -65,9 +59,8 @@ try:
         # Convert numpy types to Python native types for JSON serialization
         try:
             import numpy as np
-            import json
             
-            # Custom JSON encoder to handle numpy types
+            # Custom JSON encoder for numpy types
             class NumpyEncoder(json.JSONEncoder):
                 def default(self, obj):
                     if isinstance(obj, np.integer):
@@ -78,23 +71,23 @@ try:
                         return obj.tolist()
                     return super().default(obj)
             
-            # Use the custom encoder to convert the result
+            # Convert result using custom encoder
             result = json.loads(json.dumps(result, cls=NumpyEncoder))
         except:
-            pass  # If numpy is not available or conversion fails, continue
+            pass  # Continue if numpy is not available
         
         # Restore stdout and print captured output
         sys.stdout = original_stdout
         print(stdout_capture.getvalue(), end='')
         
-        # Validate that the result is JSON serializable
+        # Validate JSON serializability
         try:
             json.dumps(result)
         except (TypeError, ValueError) as e:
             print(f"Error: main() function must return valid JSON: {{str(e)}}", file=sys.stderr)
             sys.exit(1)
         
-        # Print the result as JSON on the last line
+        # Print result as JSON on last line
         print(json.dumps(result))
         
     finally:
@@ -106,7 +99,7 @@ except Exception as e:
     traceback.print_exc(file=sys.stderr)
     sys.exit(1)'''
         
-        # Create temporary file for the wrapper
+        # Create temporary file for wrapper
         with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
             f.write(wrapper_script)
             wrapper_file = f.name
@@ -120,24 +113,23 @@ except Exception as e:
             cwd='/tmp'
         )
         
-        # Check if execution was successful
+        # Check execution success
         if result.returncode != 0:
             raise RuntimeError(f"Script execution failed: {result.stderr}")
         
-        # Parse the output to separate stdout from return value
+        # Parse output to separate stdout from return value
         lines = result.stdout.strip().split('\n')
         
-        # The last line should contain the return value (JSON)
         if not lines:
             raise ValueError("Script execution produced no output")
         
-        # Try to parse the last line as JSON (return value)
+        # Last line contains return value (JSON)
         try:
             return_value = json.loads(lines[-1])
         except json.JSONDecodeError:
             raise ValueError("main() function must return valid JSON")
         
-        # Everything except the last line is stdout
+        # Everything except last line is stdout
         stdout_output = '\n'.join(lines[:-1]) if len(lines) > 1 else ""
         
         return {
