@@ -29,5 +29,11 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
+# Copy startup script
+COPY start.sh .
+
+# Make startup script executable
+RUN chmod +x start.sh
+
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "60", "app:app"] 
+CMD ["./start.sh"] 
